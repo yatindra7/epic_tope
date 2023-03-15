@@ -1,4 +1,4 @@
-from functools import map, reduce
+from functools import reduce
 
 # from collections import namedtuple
 # EpitopeEntry = namedtuple('EpitopeEntry', ['aa', 'idx'])
@@ -467,7 +467,7 @@ class Analyze:
 
     def __aggregate_calc(self, __dict_to_map):
 
-        return reduce(lambda x, y: x + y, map(lambda x: __dict_to_map[x], self.epitope_split))
+        return reduce(lambda x, y: x + y, map(lambda x: __dict_to_map[x['aa']], self.epitope_split))
     
     def get_total_hydrophobicity(self):
 
@@ -546,3 +546,4 @@ if __name__ == '__main__':
     print("NON_AROMATIC: ", analy.get_non_aromatic())
     print("ALIPHATIC: ", analy.get_aliphatic())
     print("ESSENTIAL: ", analy.get_essential())
+    print("SASA: ", analy.get_total_sasa())

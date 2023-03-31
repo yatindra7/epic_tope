@@ -13,7 +13,7 @@ FILE_NOT_OPENED = '[EXCEP] Unable to open file, aborting'
 class XLSX:
 
     # class vars
-    filename = 'Discontinuous.xlsx'
+    filename = 'data/Discontinuous.xlsx'
     file_handle = None
     rows = None
     cols = None
@@ -35,7 +35,7 @@ class XLSX:
         self.rows = len(self.file_handle.index)
         self.cols = len(self.file_handle.columns)
 
-    def read_sequence(self):
+    def __call__(self):
 
         """
             reads an xlsx file of the format provided in week-1
@@ -50,4 +50,8 @@ class XLSX:
 if __name__ == '__main__':
     xls = XLSX()
 
-    print(type(xls.read_sequence()))
+    print("Type: ")
+    print(type(xls()))
+    print("An overview: ")
+    print(list(xls())[:50])
+    

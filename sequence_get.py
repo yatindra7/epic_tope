@@ -51,6 +51,15 @@ class XLSX:
         self.rows = len(self.file_handle.index)
         self.cols = len(self.file_handle.columns)
 
+    @staticmethod
+    def _filter(entry: str) -> bool:
+        
+        """
+            filters rows that do not pass the check
+        """
+
+        return '+' in entry or ':' in entry or '(' in entry or ')' in entry or '.' in entry or ';' in entry
+
     def __call__(self):
 
         """
@@ -60,7 +69,7 @@ class XLSX:
 
         row_get = self.file_handle.iloc
         return (row_get[row][0]
-                    for row in range(1, self.rows) )
+                    for row in range(1, self.rows) if not XLSX._filter(row_get[row][0]))
 
 class EXPASY:
 

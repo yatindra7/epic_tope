@@ -33,12 +33,29 @@ class AAIndex:
     aaidx: dict = None
     frame: pd.DataFrame = None
 
+    @staticmethod
+    def _splt(entry: str, _seq: str):
+        val: dict = None
+        try:
+            val = {"aa":entry.strip()[0], "idx":int(entry.strip()[1:])}
+        except Exception as ex:
+            print("[EXCEP]", ex)
+            print("[EXCEP] entry:", _seq)
+            return None
+        
+        return val
+            
+    @staticmethod
+    def _fltr(_sequence: str):
+        return _sequence is not None and _sequence[0].isalpha()
+
     def __init__(self, epitope_sequence: list):
         self.epitope_sequence = epitope_sequence
-        self.epitope_split = [ [{"aa":entry.strip()[0], "idx":int(entry.strip()[1:])}
-                                                                        for entry in _sequence.split(',')]
-                                                                            for _sequence in epitope_sequence ]
+        self.epitope_split = [ [AAIndex._splt(entry=entry, _seq=_sequence)
+                                        for entry in _sequence.split(',') if AAIndex._splt(entry=entry, _seq=_sequence) is not None]
+                                            for _sequence in epitope_sequence if AAIndex._fltr(_sequence)]
 
+        # print(self.epitope_split)
         # get the data read
         with open('data/aaindex1.json', 'r') as aaindex_handle:
             self.aaidx = json.load(aaindex_handle)
@@ -46,13 +63,21 @@ class AAIndex:
 
     def __aggregate_calc(self, __dict_to_map: dict, _epitope_split: list):
 
-        return reduce(lambda x, y: x + y, map(lambda x: __dict_to_map[x['aa']], _epitope_split))
+        val = None
+        try:
+            val = reduce(lambda x, y: x + y, map(lambda x: __dict_to_map[x['aa']], _epitope_split))
+        except Exception as ex:
+            print("[EXCEP]", ex)
+            # print("Epitope:", _epitope_split, "Dict:", __dict_to_map)
+            return None
+        
+        return val
 
     def __call__(self, fname='data/epitope.aaindex.csv'):
 
         _frame = [ [ self.__aggregate_calc(_dict, e)
-                                for _dict in self.aaidx.values() ]
-                                            for e in self.epitope_split ]
+                                for _dict in self.aaidx.values() if self.__aggregate_calc(_dict, e) is not None]
+                                            for e in self.epitope_split if len(e) != 0]
         self.frame = pd.DataFrame(_frame, columns = self.aaidx.keys())
 
         try:
@@ -71,11 +96,22 @@ class CustomIndex:
     _hydrophobicity_thresh = 2
     _volume_thresh = 70
 
+    @staticmethod
+    def _splt(entry):
+        val: dict = None
+        try:
+            val = {"aa":entry.strip()[0], "idx":int(entry.strip()[1:])}
+        except Exception as ex:
+            print("[EXCEP]", ex)
+            return None
+        
+        return val
+
     def __init__(self, epitope_sequence: list):
         self.epitope_sequence = epitope_sequence
-        self.epitope_split = [ [{"aa":entry.strip()[0], "idx":int(entry.strip()[1:])}
-                                                                        for entry in _sequence.split(',')]
-                                                                            for _sequence in epitope_sequence ]
+        self.epitope_split = [ [CustomIndex._splt(entry=entry)
+                                        for entry in _sequence.split(',') if CustomIndex._splt(entry=entry) is not None]
+                                            for _sequence in epitope_sequence if _sequence is not None]
 
     def _filter_sum(self, condition):
 

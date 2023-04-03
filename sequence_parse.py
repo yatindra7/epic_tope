@@ -1,13 +1,30 @@
 from functools import reduce
-from aadict import *
 import typing
 import json
+
 import pandas as pd
 
-from aaindex import aaindex1 as prop_dict
+from aadict import *
 
 # from collections import namedtuple
 # EpitopeEntry = namedtuple('EpitopeEntry', ['aa', 'idx'])
+
+# exceptions
+EXCEP = '[EXCEP] An exception occured:'
+FILE_NOT_OPENED = '[EXCEP] Unable to open file, aborting'
+PANDAS_TO_CSV = '[EXCEP] Pandas to_csv failed'
+
+# abort on exception
+def _abort_on_exception(excep, msg):
+
+    """
+        util to print exception, and abort
+    """
+    print(EXCEP, excep)
+    print(msg)
+            
+    # aborting
+    exit()
 
 class AAIndex:
 
@@ -31,16 +48,20 @@ class AAIndex:
 
         return reduce(lambda x, y: x + y, map(lambda x: __dict_to_map[x['aa']], _epitope_split))
 
-    def __call__(self):
+    def __call__(self, fname='data/epitope.aaindex.csv'):
 
         _frame = [ [ self.__aggregate_calc(_dict, e)
                                 for _dict in self.aaidx.values() ]
                                             for e in self.epitope_split ]
         self.frame = pd.DataFrame(_frame, columns = self.aaidx.keys())
 
-        self.frame.to_csv('data/epitope.ftrs.csv')  
+        try:
+            self.frame.to_csv(fname)  
+        except:
+            _abort_on_exception(PANDAS_TO_CSV)
+            return -1
 
-        return self.frame
+        return 0
 
 class CustomIndex:
 
@@ -284,7 +305,7 @@ class CustomIndex:
 
     #     return [ self.__aaidx_extract( prop ) for prop in property_codes ]
     
-    def __call__(self) -> pd.DataFrame:
+    def __call__(self, fname='data/epitope.cstmidx.csv') -> int:
 
         """
             creates a dataframe containing all the features
@@ -299,9 +320,13 @@ class CustomIndex:
         _data = {pt[0]: pt[1] for pt in _data}
 
         self.frame = pd.DataFrame(_data)
-        self.frame.to_csv('data/epitope.cstmidx.csv')
+        try:
+            self.frame.to_csv(fname)
+        except:
+            _abort_on_exception(PANDAS_TO_CSV)
+            return -1
 
-        return self.frame
+        return 0
 
 if __name__ == '__main__':
 

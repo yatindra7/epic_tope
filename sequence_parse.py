@@ -14,6 +14,7 @@ class AAIndex:
     epitope_sequence: list = None
     epitope_split: list = None
     aaidx: dict = None
+    frame: pd.DataFrame = None
 
     def __init__(self, epitope_sequence: list):
         self.epitope_sequence = epitope_sequence
@@ -25,39 +26,44 @@ class AAIndex:
         with open('data/aaindex1.json', 'r') as aaindex_handle:
             self.aaidx = json.load(aaindex_handle)
             self.aaidx = {key: value['values'] for key, value in self.aaidx.items()}
-        
-        print(self.aaidx)
 
     def __aggregate_calc(self, __dict_to_map: dict, _epitope_split: list):
 
-        print(type(__dict_to_map), __dict_to_map)
         return reduce(lambda x, y: x + y, map(lambda x: __dict_to_map[x['aa']], _epitope_split))
 
     def __call__(self):
 
-        frame = [ [ self.__aggregate_calc(_dict, e)
+        _frame = [ [ self.__aggregate_calc(_dict, e)
                                 for _dict in self.aaidx.values() ]
                                             for e in self.epitope_split ]
-        frame = pd.DataFrame(frame, columns = self.aaidx.keys())
+        self.frame = pd.DataFrame(_frame, columns = self.aaidx.keys())
 
-        frame.to_csv('data/epitope.ftrs.csv')  
+        self.frame.to_csv('data/epitope.ftrs.csv')  
+
+        return self.frame
 
 class CustomIndex:
 
-    epitope_sequence = None
-    epitope_split = None
-    total_weight = None
-    num_sulphur = None
+    epitope_sequence: list = None
+    epitope_split: list = None
+    frame: pd.DataFrame = None
     _hydrophobicity_thresh = 2
     _volume_thresh = 70
 
-    def __init__(self, epitope_sequence: str):
+    def __init__(self, epitope_sequence: list):
         self.epitope_sequence = epitope_sequence
+        self.epitope_split = [ [{"aa":entry.strip()[0], "idx":int(entry.strip()[1:])}
+                                                                        for entry in _sequence.split(',')]
+                                                                            for _sequence in epitope_sequence ]
 
-        # calculating the epitope split for convenience
-        self.epitope_split = [{"aa":entry.strip()[0], "idx":int(entry.strip()[1:])}
-                                            for entry in epitope_sequence.split(',')]
+    def _filter_sum(self, condition):
 
+        # sum = 0
+        # for entry in self.epitope_split:
+        #     # print("AA: ", entry['aa'], " COND: ", condition(entry['aa']))
+        #     sum += 1 if condition(entry['aa']) else 0
+    
+        return [reduce(lambda x, y: x + y, map(lambda x: 1 if condition(x['aa']) else 0, epitope), 0) for epitope in self.epitope_split]
 
     def get_num_sulphur(self):
 
@@ -65,15 +71,9 @@ class CustomIndex:
             getting the number of sulphurs which can create
             a disulphurous bond.
         """
-        
-        if self.num_sulphur is not None:
-            return self.num_sulphur
 
-        self.num_sulpurs = 0
-        for entry in self.epitope_split:
-            self.num_sulpurs += 1 if entry['aa'] == 'C' else 0
-        
-        return 'num_sulphur', self.num_sulpurs
+        condition = lambda aa: True if aa == 'C' else False
+        return 'num_sulphur', self._filter_sum(condition)
 
     def get_num_aa(self, aa):
 
@@ -82,36 +82,8 @@ class CustomIndex:
             the code given.
         """
 
-        num_aa = 0
-        for entry in self.epitope_split:
-            num_aa += 1 if entry['aa'] == aa else 0
-        
-        return 'num_aa', num_aa
-    
-    def get_total_weight(self):
-        
-        """
-            calculate the total moklecular weight of the epitope
-        """
-        if self.total_weight is not None:
-            # do nothing
-            
-            return self.total_weight
-        else:
-            self.total_weight = 0
-            for entry in self.epitope_split:
-                self.total_weight += aa_weights[ entry['aa'] ]
-        
-        return 'weight', self.total_weight
-
-    def _filter_sum(self, condition):
-
-        sum = 0
-        for entry in self.epitope_split:
-            # print("AA: ", entry['aa'], " COND: ", condition(entry['aa']))
-            sum += 1 if condition(entry['aa']) else 0
-        
-        return sum
+        condition = lambda x: True if x == aa else False
+        return 'num_aa', self._filter_sum(condition=condition)
 
     def get_polar_non_positive_non_negative(self):
         
@@ -226,8 +198,16 @@ class CustomIndex:
 
     def __aggregate_calc(self, __dict_to_map):
 
-        return reduce(lambda x, y: x + y, map(lambda x: __dict_to_map[x['aa']], self.epitope_split))
-    
+        return [reduce(lambda x, y: x + y, map(lambda x: __dict_to_map[x['aa']], epitope), 0) for epitope in self.epitope_split]
+
+    def get_total_weight(self):
+        
+        """
+            calculate the total moklecular weight of the epitope
+        """
+        
+        return 'weight', self.__aggregate_calc(aa_weights)
+
     def get_total_hydrophobicity(self):
 
         """
@@ -304,28 +284,31 @@ class CustomIndex:
 
     #     return [ self.__aaidx_extract( prop ) for prop in property_codes ]
     
-    # def create_dataframe(self):
+    def __call__(self) -> pd.DataFrame:
 
-    #     """
-    #         creates a dataframe containing all the features
-    #         as different columns is generated for the given data
-    #     """
+        """
+            creates a dataframe containing all the features
+            as different columns is generated for the given data
+        """
 
-    #     _data = [getattr(self, mthd)() for mthd in self.__dir__() if callable( getattr(self, mthd) ) and mthd.startswith('get_') and not mthd.endswith('get_num_aa')]
-    #     _data.extend( self.get_total_aaindex() )
+        _data = [getattr(self, mthd)() 
+                            for mthd in self.__dir__()
+                                            if callable( getattr(self, mthd) ) and
+                                                mthd.startswith('get_') and 
+                                                    not mthd.endswith('get_num_aa')]
+        _data = {pt[0]: pt[1] for pt in _data}
 
-    #     cols = []
-    #     vals = []
-    #     for col, val in _data:
-    #         cols.append(col)
-    #         vals.append(val)
-    #     return cols, val
+        self.frame = pd.DataFrame(_data)
+        self.frame.to_csv('data/epitope.cstmidx.csv')
+
+        return self.frame
 
 if __name__ == '__main__':
 
-    trial_seq = 'W155, S156, I157, Q158, N159, C203, Y204, D205, M206, K207, T208, T209, C210'
+    trial_seq = ['W155, S156, I157, Q158, N159, C203, Y204, D205, M206, K207, T208, T209, C210','E53, R98, E107', 'E170, E172', 'L87, L88, V90, R91, S92, E132', 'W155, S156, I157, Q158, N159, C203, Y204, D205, M206, K207, T208, T209, C210', 'D429, R441, D454', 'D429, R441, D454, D463', 'D429, R441, E452, D454', 'D454', 'P462', 'G104, E126, W231', 'G104, G106, E126, W231', 'G104, G106, L107, W231', 'G106, L107', 'T76, G104, G106, L107, E126, W231', 'T76, G106, L107, W231', 'G302', 'I126', 'K179', 'Q52, I126, K136, S275', 'I258', 'N245', 'P199', 'E472, K514', 'G138, R146', 'G138, T144, S145, R146', 'S145, D153, T197, N201, T206, L234', 'S145, T147, K165, P170, T197, T206', 'K307, T330', 'Y302, S306, K307, A308, F309, T330, G331, T332, D333, A365, T366, A367, N368, G389, E390, Q391', 'L271', 'A10', 'A10, A46', 'A10, A46, A95', 'A10, A46, E51, K91', 'A10, E11, Y12, G33, K34, R35, E36, E51, W88, A95', 'A10, Y12, G33, K34, R35, E36, E51, W88, K91, A95', 'A46', 'A198', 'D63', 'G144', 'G158', 'N54', 'S145', 'S157', 'S193', 'S199', 'S205', 'A198', 'D63', 'G129']
     analy = CustomIndex(trial_seq)
     
+    print('CALL: ', analy())
     print("NUM_SULPH: ", analy.get_num_sulphur())
     print("GET_AA: ", analy.get_num_aa('T'))
     print("TOTAL_WT: ", analy.get_total_weight())

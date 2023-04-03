@@ -236,6 +236,7 @@ class EXPASY:
         with webdriver.Chrome(ChromeDriverManager().install()) as driver:
             for idx, value in enumerate(self.file_handle.values):
                 
+                print(f"starting for {value}")
                 # extracting the sequence
                 sequence = value[0]
                 
@@ -250,8 +251,11 @@ class EXPASY:
                 submit_btn.click()
 
                 data_div = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="sib_body"]/pre[2]')))
+
+                print(f"retrieved, sleeping")
                 time.sleep(10)
 
+                print(f"extracting, done sleeping")
                 self.__extract_data(data_div.text , idx)
 
         row_get = self.file_handle.iloc
@@ -266,9 +270,9 @@ if __name__ == '__main__':
     print("An overview: ")
     print(list(xls())[:50])
 
-    exp = EXPASY()
-
-    print("Type: ")
-    print(type(exp()))
-    print("An overview: ")
-    print(list(exp())[:50])
+    # exp = EXPASY()
+    # print("Type: ")
+    # ret = exp()
+    # print(type(ret))
+    # print("An overview: ")
+    # print(list(ret)[:50])

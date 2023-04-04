@@ -1,0 +1,4 @@
+Epitope sructure : Discontinuous
+Organism : Dengue (ID: 12637)
+include positive assays
+Host : Human

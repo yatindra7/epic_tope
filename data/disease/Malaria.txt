@@ -1,0 +1,4 @@
+Epitope sructure : Discontinuous
+Organism : Plasmodium (ID: 5820)
+include positive assays
+Host : Human

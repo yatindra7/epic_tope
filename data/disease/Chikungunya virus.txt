@@ -1,0 +1,4 @@
+Epitope sructure : Discontinuous
+Organism : Chikungunya virus(ID: 37124)
+include positive assays
+Host : Human

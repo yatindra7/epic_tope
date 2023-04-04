@@ -30,6 +30,48 @@ def _abort_on_exception(excep, msg):
     # aborting
     exit()
 
+class CSV:
+
+    # class vars
+    filename = 'data/Discontinuous.xlsx'
+    file_handle = None
+    rows = None
+    cols = None
+
+    def __init__(self, filename = 'data/Discontinuous.xlsx'):
+
+        self.filename = filename
+
+        # handling the incorrect filename
+        try:
+            self.file_handle = pd.read_csv(filename)
+        except Exception as ex:
+            _abort_on_exception(ex, FILE_NOT_OPENED)
+        
+        self.rows = len(self.file_handle.index)
+        self.cols = len(self.file_handle.columns)
+
+    @staticmethod
+    def _filter(entry: str) -> bool:
+        
+        """
+            filters rows that do not pass the check
+        """
+
+        #print('[DEBUG] entry:', entry)
+        return '+' in entry or ':' in entry or '(' in entry or ')' in entry or '.' in entry or ';' in entry
+
+    def __call__(self, col=0):
+
+        """
+            reads an xlsx file of the format provided in week-1
+            `TBC`
+        """
+
+        row_get = self.file_handle.iloc
+        return (row_get[row][col]
+                    for row in range(1, self.rows) if not CSV._filter(row_get[row][col]))
+
 class XLSX:
 
     # class vars
@@ -60,7 +102,7 @@ class XLSX:
 
         return '+' in entry or ':' in entry or '(' in entry or ')' in entry or '.' in entry or ';' in entry
 
-    def __call__(self):
+    def __call__(self, col=0):
 
         """
             reads an xlsx file of the format provided in week-1
@@ -68,8 +110,8 @@ class XLSX:
         """
 
         row_get = self.file_handle.iloc
-        return (row_get[row][0]
-                    for row in range(1, self.rows) if not XLSX._filter(row_get[row][0]))
+        return (row_get[row][col]
+                    for row in range(1, self.rows) if not XLSX._filter(row_get[row][col]))
 
 class EXPASY:
 

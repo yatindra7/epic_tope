@@ -73,20 +73,20 @@ class AAIndex:
         
         return val
 
-    def __call__(self, fname='data/epitope.aaindex.csv'):
+    def __call__(self, fname='data/epitope.aaindex.csv', save:bool=False):
 
         _frame = [ [ self.__aggregate_calc(_dict, e)
                                 for _dict in self.aaidx.values() if self.__aggregate_calc(_dict, e) is not None]
                                             for e in self.epitope_split if len(e) != 0]
         self.frame = pd.DataFrame(_frame, columns = self.aaidx.keys())
 
-        try:
-            self.frame.to_csv(fname)  
-        except:
-            _abort_on_exception(PANDAS_TO_CSV)
-            return -1
+        if save:
+            try:
+                self.frame.to_csv(fname)  
+            except:
+                _abort_on_exception(PANDAS_TO_CSV)
 
-        return 0
+        return self.frame
 
 class CustomIndex:
 
@@ -341,7 +341,7 @@ class CustomIndex:
 
     #     return [ self.__aaidx_extract( prop ) for prop in property_codes ]
     
-    def __call__(self, fname='data/epitope.cstmidx.csv') -> int:
+    def __call__(self, fname='data/epitope.cstmidx.csv', save: bool=False):
 
         """
             creates a dataframe containing all the features
@@ -356,13 +356,14 @@ class CustomIndex:
         _data = {pt[0]: pt[1] for pt in _data}
 
         self.frame = pd.DataFrame(_data)
-        try:
-            self.frame.to_csv(fname)
-        except:
-            _abort_on_exception(PANDAS_TO_CSV)
-            return -1
 
-        return 0
+        if save:
+            try:
+                self.frame.to_csv(fname)
+            except:
+                _abort_on_exception(PANDAS_TO_CSV)
+
+        return self.frame
 
 if __name__ == '__main__':
 

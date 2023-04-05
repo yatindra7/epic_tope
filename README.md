@@ -1,6 +1,37 @@
 # epic_tope
 An epitope prediction util under development!
 
-## possible architectures...under consideration
-![image](https://user-images.githubusercontent.com/84220034/229100581-3d44b33d-2a65-46ca-b96a-268591e97f0a.png)
-</br> (credits: `DeepNetBim: deep learning model for predicting HLA-epitope interactions based on network analysis by harnessing binding and immunogenicity information` )
+## How to use it?
+```
+from sequence_get import CSV
+from sequence_parse import AAIndex, CustomIndex
+
+xls = CSV(filename='data/fake.csv')
+list_of_epitope = list(xls())
+
+print([el for el in list_of_epitope if len(el) < 4])
+
+aaidx = AAIndex(list_of_epitope)
+custidx = CustomIndex(list_of_epitope)
+
+aaidx(fname='data/fake.aaidx.csv', save=True)
+custidx(fname='data/fake.custidx.csv', save=True)
+```
+the above block shows how we can import from the module:
+- `sequence_get`: used for extracting sequences and data
+  - `XLS` for xls files
+  - `CSV` for csv files
+  - `EXPASY` for scraping
+- `sequence_parse`: used for calculating features for epitope
+  - `AAIndex` using `AAIndex(epitope_list: list)` constructor,
+    for a created variable, pass `save` as True, if you wish to save
+    the results, and pass the save path
+  - `CustomIndex` same as AAIndex
+- `sequence_gen`: use for generating random epitopes
+  - `RandomGenerator` using `RandomGenerator(protein)`, you can
+    create epitopes over an existing protein by calling the created
+    object
+    ```
+    randgen = RandomGenerator()
+    val = randgen()
+    ```

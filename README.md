@@ -38,3 +38,7 @@ the above block shows how we can import from the module:
     randgen = RandomGenerator()
     val = randgen()
     ```
+
+## notebooks
+- `cbp_plot*` notebooks contain plots and analysis of our work
+- `cbp_dengue` notebook contains dengue analysis

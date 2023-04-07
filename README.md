@@ -2,6 +2,9 @@
 An epitope prediction util under development!
 
 ## How to use it?
+
+We will be making a Python package out of this soon!
+
 ```
 from sequence_get import CSV
 from sequence_parse import AAIndex, CustomIndex
